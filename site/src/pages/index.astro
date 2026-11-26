@@ -2,6 +2,7 @@
 import gemDocument from '../../../integrations/gemini-gem.md?raw';
 import demo from '../listening-demo.json';
 import HostPicker from '../components/host-picker.astro';
+import { sampleCsv } from '../sample-playlist';
 import '../site.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
@@ -40,6 +41,7 @@ const position = (index: number) => String(index + 1).padStart(2, '0');
 const from = position(demo.order.before.indexOf(demo.changedTrack));
 const to = position(demo.order.after.indexOf(demo.changedTrack));
 const samplePrompt = `Use Playlist Organizer to review ${demo.name}. Keep the current order unless this listening note asks for a change. Show me the revised order before editing anything.\n\n${demo.savedNote}`;
+const sampleWithTracks = `${samplePrompt}\n\nSample CSV:\n${sampleCsv.trimEnd().replaceAll('\r\n', '\n')}`;
 const description = 'An open-source AI skill for organizing playlists, comparing changes, and carrying listening notes into your next draft.';
 ---
 <!doctype html>
@@ -155,20 +157,22 @@ const description = 'An open-source AI skill for organizing playlists, comparing
           ))}
 
           <div class="panel" data-setup="claude" hidden>
-            <p>Download the skill ZIP. In Claude, open <strong>Plugins</strong> (or <strong>Customize → Skills</strong>) and upload it. Enable code execution if prompted.</p>
+            <p>Download the ZIP, then open <strong>Plugins → Add → Upload plugin</strong> in Claude. Select the ZIP and click <strong>Upload</strong>.</p>
             <a class="button primary" href={zip}>Download skill ZIP</a>
-            <a class="guide-link" href="https://support.claude.com/en/articles/12512180-use-skills-in-claude">Claude setup guide</a>
+            <a class="guide-link" href="https://claude.ai/plugins/new/upload">Open Claude upload</a>
+            <p>On the older interface, use <strong>Customize → Skills</strong>. Enable code execution in Settings if Claude asks. <a href="https://support.claude.com/en/articles/12512180-use-skills-in-claude">Claude setup guide</a></p>
           </div>
           <div class="panel" data-setup="gemini" hidden>
             <p>Copy the request and paste it into a new Gemini chat to create the skill.</p>
             <div class="install-actions">
               <button type="button" class="button primary" data-copy data-copy-source="gemini-request" data-feedback="Request copied. Paste it into Gemini." hidden aria-label="Copy install request for Gemini">Copy install request</button>
-              <a class="guide-link" href="https://gemini.google.com/">Open Gemini</a>
+              <a class="guide-link" href="https://gemini.google.com/app">Open Gemini</a>
             </div>
             <details class="request-preview">
               <summary>View install request</summary>
               <pre><code id="gemini-request">{geminiRequest}</code></pre>
             </details>
+            <p>When Gemini confirms the skill is saved, start a new chat. Type <code>@playlist-organizer</code> and select it from the Skills list before sending the sample.</p>
             <details class="setup-alternative">
               <summary>Use Gems if Skills is unavailable</summary>
               <p>Create a Gem named <strong>Playlist Organizer</strong> and paste these instructions.</p>
@@ -190,6 +194,14 @@ const description = 'An open-source AI skill for organizing playlists, comparing
               <pre><code>{samplePrompt}</code></pre>
               <button type="button" data-copy hidden aria-label="Copy the sample prompt">Copy</button>
             </div>
+            <details class="setup-alternative">
+              <summary>Try without an attachment</summary>
+              <p>Copy this prompt with the tracks included and paste it into your chat.</p>
+              <div class="snippet">
+                <pre><code>{sampleWithTracks}</code></pre>
+                <button type="button" data-copy hidden aria-label="Copy the sample prompt with tracks">Copy</button>
+              </div>
+            </details>
             <p id="sample-copy-status" class="copy-status" role="status"></p>
           </div>
         </div>
