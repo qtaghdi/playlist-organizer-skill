@@ -14,8 +14,20 @@ For local agents, copy the entire `skills/playlist-organizer/` folder into the f
 | Gemini CLI | `.gemini/skills/` or `~/.gemini/skills/`. The `.agents/skills/` paths also work. |
 | Gemini web | Create a Gem with these [instructions](integrations/gemini-gem.md). |
 | GitHub Copilot | `.github/skills/` or `~/.copilot/skills/`. |
+| Cursor | `.cursor/skills/` or `~/.cursor/skills/`. [Setup](https://cursor.com/docs/skills) |
+| OpenCode | `.opencode/skills/` or `~/.config/opencode/skills/`. Use `@playlist-organizer`. [Setup](https://opencode.ai/docs/skills/) |
 
 > Playlist Organizer로 이 플리를 정리해줘. 제목과 곡 순서를 먼저 보여줘.
+
+## Listening notes
+
+Leave one line in chat or a private notes file. Use the same file next time.
+
+```text
+새벽 | 곡 A 다음에 곡 B | 이 순서 좋아
+```
+
+[Save and apply notes](skills/playlist-organizer/references/feedback.md)
 
 ## Music services
 
@@ -24,7 +36,10 @@ For local agents, copy the entire `skills/playlist-organizer/` folder into the f
 | [Apple Music](skills/playlist-organizer/references/apple-music.md) | Music XML export |
 | [Spotify](skills/playlist-organizer/references/spotify.md) | Account Data playlist JSON and optional Extended Streaming History |
 | [YouTube Music](skills/playlist-organizer/references/youtube-music.md) | Takeout playlist CSV and optional track labels |
+| [M3U and M3U8](skills/playlist-organizer/references/m3u.md) | Local playlist file. Read it or save a new order. |
 | [Other services](skills/playlist-organizer/references/portable-inputs.md) | Track list or portable CSV |
+
+[Last.fm and ListenBrainz](skills/playlist-organizer/references/history.md) can add play history to a CSV.
 
 Live edits require access to the music app or a supported connection. Keep exports private.
 
