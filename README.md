@@ -24,9 +24,9 @@ For manual installation, copy the entire `skills/playlist-organizer/` folder int
 | --- | --- |
 | Codex | `.agents/skills/` or `~/.agents/skills/`. Run `$playlist-organizer`. |
 | Claude Code | `.claude/skills/` or `~/.claude/skills/`. Run `/playlist-organizer`. |
-| Claude web and desktop | Upload the [ZIP](https://github.com/qtaghdi/playlist-organizer-skill/releases/latest/download/playlist-organizer.zip) from **Plugins** or **Customize > Skills**. |
+| Claude web and desktop | Upload the [ZIP](https://github.com/qtaghdi/playlist-organizer-skill/releases/latest/download/playlist-organizer.zip) from **Plugins > Add > Upload plugin**. On the older interface, use **Customize > Skills**. |
 | Gemini CLI | `.gemini/skills/` or `~/.gemini/skills/`. The `.agents/skills/` paths also work. |
-| Gemini web | Ask Gemini to create a skill from these [instructions](integrations/gemini-gem.md). If your account still has Gems, paste them into a new Gem. |
+| Gemini web | Ask Gemini to create a skill from these [instructions](integrations/gemini-gem.md), then select `@playlist-organizer` in a new chat. If your account still has Gems, paste the instructions into a new Gem. |
 | GitHub Copilot | `.github/skills/` or `~/.copilot/skills/`. |
 | Cursor | `.cursor/skills/` or `~/.cursor/skills/`. [Setup](https://cursor.com/docs/skills) |
 | OpenCode | `.opencode/skills/` or `~/.config/opencode/skills/`. Use `@playlist-organizer`. [Setup](https://opencode.ai/docs/skills/) |
