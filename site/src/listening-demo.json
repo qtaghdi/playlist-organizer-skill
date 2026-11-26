@@ -1,0 +1,39 @@
+{
+  "playlistId": "commute",
+  "name": "Evening Drive",
+  "note": "Glass Alley into Over the Water. Keep this transition.",
+  "savedNote": "Evening Drive | Glass Alley \u2192 Over the Water | Keep this transition.",
+  "changedTrack": "waves",
+  "tracks": {
+    "glass": {
+      "title": "Glass Alley",
+      "artist": "Naru Field"
+    },
+    "light": {
+      "title": "One Window Lit",
+      "artist": "Sola Room"
+    },
+    "waves": {
+      "title": "Over the Water",
+      "artist": "Yeo June"
+    },
+    "end": {
+      "title": "Last Light",
+      "artist": "Oru Coast"
+    }
+  },
+  "order": {
+    "before": [
+      "glass",
+      "light",
+      "waves",
+      "end"
+    ],
+    "after": [
+      "glass",
+      "waves",
+      "light",
+      "end"
+    ]
+  }
+}
