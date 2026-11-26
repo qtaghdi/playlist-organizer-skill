@@ -1,0 +1,213 @@
+---
+interface Props {
+  options: { name: string; agent: string }[];
+}
+
+const { options } = Astro.props;
+---
+<div class="host-picker" id="host-picker" hidden>
+  <p class="host-label" id="host-label">AI app</p>
+  <div
+    class="host-trigger"
+    id="host"
+    role="combobox"
+    tabindex="0"
+    aria-labelledby="host-label"
+    aria-controls="host-options"
+    aria-expanded="false"
+    aria-haspopup="listbox"
+  >
+    <span data-host-value>{options[0].name}</span>
+    <span class="host-chevron" aria-hidden="true"></span>
+  </div>
+  <ul class="host-options" id="host-options" role="listbox" aria-labelledby="host-label" hidden>
+    {options.map(({ name, agent }, index) => (
+      <li id={`host-option-${agent}`} role="option" aria-selected={index === 0} data-agent={agent}>
+        {name}
+      </li>
+    ))}
+  </ul>
+</div>
+
+<script>
+  const picker = document.querySelector<HTMLElement>('#host-picker')!;
+  const trigger = picker.querySelector<HTMLElement>('#host')!;
+  const label = trigger.querySelector<HTMLElement>('[data-host-value]')!;
+  const listbox = picker.querySelector<HTMLElement>('#host-options')!;
+  const options = Array.from(listbox.querySelectorAll<HTMLElement>('[role="option"]'));
+  let selected = 0;
+  let active = 0;
+  let typed = '';
+  let lastKeyAt = 0;
+
+  function setActive(index: number) {
+    options[active].removeAttribute('data-active');
+    active = Math.max(0, Math.min(index, options.length - 1));
+    const option = options[active];
+    option.setAttribute('data-active', '');
+    trigger.setAttribute('aria-activedescendant', option.id);
+
+    const top = option.offsetTop;
+    const bottom = top + option.offsetHeight;
+    if (top < listbox.scrollTop) listbox.scrollTop = top;
+    if (bottom > listbox.scrollTop + listbox.clientHeight) {
+      listbox.scrollTop = bottom - listbox.clientHeight;
+    }
+  }
+
+  function open() {
+    const bounds = trigger.getBoundingClientRect();
+    const below = window.innerHeight - bounds.bottom;
+    const above = bounds.top;
+    const opensAbove = below < 320 && above > below;
+    picker.toggleAttribute('data-opens-above', opensAbove);
+    picker.style.setProperty('--options-height', `${Math.min(360, Math.max(72, (opensAbove ? above : below) - 14))}px`);
+    listbox.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+    setActive(selected);
+  }
+
+  function close() {
+    listbox.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.removeAttribute('aria-activedescendant');
+    options[active].removeAttribute('data-active');
+    typed = '';
+  }
+
+  function choose(index: number) {
+    options[selected].setAttribute('aria-selected', 'false');
+    selected = index;
+    const option = options[selected];
+    option.setAttribute('aria-selected', 'true');
+    label.textContent = option.textContent?.trim() ?? '';
+    picker.dispatchEvent(new CustomEvent('hostchange', { detail: option.dataset.agent }));
+    close();
+  }
+
+  trigger.addEventListener('click', () => {
+    trigger.focus({ preventScroll: true });
+    if (listbox.hidden) open();
+    else close();
+  });
+
+  // Keep focus on the combobox when an option is clicked.
+  listbox.addEventListener('mousedown', (event) => event.preventDefault());
+  listbox.addEventListener('click', (event) => {
+    const option = (event.target as Element).closest<HTMLElement>('[role="option"]');
+    if (!option) return;
+    choose(options.indexOf(option));
+    trigger.focus({ preventScroll: true });
+  });
+
+  document.addEventListener('pointerdown', (event) => {
+    if (!listbox.hidden && !picker.contains(event.target as Node)) close();
+  });
+
+  document.addEventListener('focusin', (event) => {
+    if (!listbox.hidden && !picker.contains(event.target as Node)) close();
+  });
+
+  window.addEventListener('resize', () => {
+    if (!listbox.hidden) close();
+  });
+
+  trigger.addEventListener('keydown', (event) => {
+    const { key } = event;
+    const wasOpen = !listbox.hidden;
+    if (key === 'Escape' && wasOpen) {
+      event.preventDefault();
+      close();
+    } else if (key === 'Tab' && wasOpen) {
+      choose(active);
+    } else if (key === 'Enter' || key === ' ') {
+      event.preventDefault();
+      if (wasOpen) choose(active);
+      else open();
+    } else if (['ArrowDown', 'ArrowUp', 'Home', 'End', 'PageUp', 'PageDown'].includes(key)) {
+      event.preventDefault();
+      if (!wasOpen) open();
+      if (key === 'Home' || (key === 'ArrowUp' && !wasOpen)) setActive(0);
+      else if (key === 'End') setActive(options.length - 1);
+      else if (key === 'PageUp') setActive(active - 5);
+      else if (key === 'PageDown') setActive(active + 5);
+      else if (wasOpen) setActive(active + (key === 'ArrowDown' ? 1 : -1));
+    } else if (key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      if (!wasOpen) open();
+      const now = Date.now();
+      const character = key.toLocaleLowerCase('en');
+      typed = now - lastKeyAt < 600 ? typed + character : character;
+      lastKeyAt = now;
+      const repeat = [...typed].every((letter) => letter === character);
+      const query = repeat ? character : typed;
+      const indexes = options.map((_, step) => (active + (repeat ? 1 : 0) + step) % options.length);
+      const match = indexes.find((index) => options[index].textContent?.trim().toLowerCase().startsWith(query));
+      if (match !== undefined) setActive(match);
+    }
+  });
+
+  picker.hidden = false;
+</script>
+
+<style>
+  .host-picker { position: relative; width: min(100%, 340px); }
+  .host-label { margin-bottom: 7px; font-size: .81rem; font-weight: 680; }
+  .host-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 49px;
+    padding: 8px 15px;
+    border: 1px solid #8e8779;
+    border-radius: var(--radius-control);
+    background: #fffdfa;
+    color: var(--ink);
+    font-size: .93rem;
+    font-weight: 690;
+    cursor: pointer;
+  }
+  .host-trigger:hover, .host-trigger[aria-expanded="true"] { border-color: #494338; }
+  .host-chevron {
+    width: 8px;
+    height: 8px;
+    margin: -3px 2px 0 0;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+  }
+  .host-trigger[aria-expanded="true"] .host-chevron { margin-top: 3px; transform: rotate(225deg); }
+  .host-options {
+    position: absolute;
+    z-index: 2;
+    inset: calc(100% + 6px) 0 auto;
+    max-height: var(--options-height, 360px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    padding: 5px;
+    list-style: none;
+    background: #fffdfa;
+    box-shadow: 0 8px 24px #211c161f;
+  }
+  .host-picker[data-opens-above] .host-options { inset: auto 0 calc(100% - 16px); }
+  .host-options li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 44px;
+    padding: 7px 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: var(--ink);
+    font-size: .86rem;
+    cursor: pointer;
+  }
+  .host-options li[aria-selected="true"] { font-weight: 720; }
+  .host-options li[aria-selected="true"]::after { content: "✓" / ""; }
+  .host-options li:hover, .host-options li[data-active] { background: #f0ede6; }
+  .host-options li[data-active] { border-color: #9a9183; }
+</style>

@@ -1,6 +1,7 @@
 ---
 import gemDocument from '../../../integrations/gemini-gem.md?raw';
 import demo from '../listening-demo.json';
+import HostPicker from '../components/host-picker.astro';
 import '../site.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
@@ -8,6 +9,8 @@ const repo = 'https://github.com/qtaghdi/playlist-organizer-skill';
 const zip = `${repo}/releases/latest/download/playlist-organizer.zip`;
 const docs = `${repo}/blob/main/skills/playlist-organizer/references`;
 const gemInstructions = gemDocument.split('\n---\n')[1].trim();
+const codexRequest = `Use $skill-installer to install Playlist Organizer from ${repo}/tree/main/skills/playlist-organizer`;
+const geminiRequest = `Create a skill named Playlist Organizer based on these instructions:\n\n${gemInstructions}`;
 const command = (agent: string) =>
   `npx --yes skills add qtaghdi/playlist-organizer-skill --skill playlist-organizer -a ${agent} -g -y`;
 const hosts = [
@@ -17,6 +20,13 @@ const hosts = [
   { name: 'GitHub Copilot', agent: 'github-copilot', invocation: '' },
   { name: 'Cursor', agent: 'cursor', invocation: '' },
   { name: 'OpenCode', agent: 'opencode', invocation: '@playlist-organizer' },
+];
+const hostOptions = [
+  hosts[0],
+  { name: 'Claude web and desktop', agent: 'claude' },
+  hosts[1],
+  { name: 'Gemini web', agent: 'gemini' },
+  ...hosts.slice(2),
 ];
 const inputs = [
   { name: 'Apple Music', file: 'Music XML', ref: 'apple-music' },
@@ -108,36 +118,66 @@ const description = 'An open-source AI skill for organizing playlists, comparing
           <p>Choose your app, then try the same playlist.</p>
         </div>
         <div class="setup-content">
-          <label for="host" hidden>AI app</label>
-          <select id="host" hidden>
-            {hosts.map(({ name, agent }) => <option value={agent}>{name}</option>)}
-            <option value="claude">Claude web and desktop</option>
-            <option value="gemini">Gemini web</option>
-          </select>
+          <HostPicker options={hostOptions} />
 
           {hosts.map(({ name, agent, invocation }) => (
             <div class="panel" data-setup={agent} hidden={agent !== 'codex'}>
-              <p>Run in your terminal with Node.js and npm.</p>
-              <div class="snippet">
-                <pre><code>{command(agent)}</code></pre>
-                <button type="button" data-copy hidden aria-label={`Copy the ${name} install command`}>Copy</button>
-              </div>
-              {invocation ? <p>Open your AI app and enter <code>{invocation}</code>.</p> : <p>Open your AI app and ask it to use Playlist Organizer.</p>}
+              {agent === 'codex' ? (
+                <>
+                  <p>Copy this request and paste it into a Codex chat.</p>
+                  <div class="install-actions">
+                    <button type="button" class="button primary" data-copy data-copy-source="codex-request" data-feedback="Request copied. Paste it into Codex." hidden aria-label="Copy install request for Codex">Copy install request</button>
+                  </div>
+                  <details class="request-preview">
+                    <summary>View install request</summary>
+                    <pre><code id="codex-request">{codexRequest}</code></pre>
+                  </details>
+                  <details class="setup-alternative">
+                    <summary>Install from a terminal</summary>
+                    <p>Run with Node.js and npm.</p>
+                    <div class="snippet">
+                      <pre><code>{command(agent)}</code></pre>
+                      <button type="button" data-copy hidden aria-label="Copy the Codex install command">Copy</button>
+                    </div>
+                  </details>
+                </>
+              ) : (
+                <>
+                  <p>Run in your terminal with Node.js and npm.</p>
+                  <div class="snippet">
+                    <pre><code>{command(agent)}</code></pre>
+                    <button type="button" data-copy hidden aria-label={`Copy the ${name} install command`}>Copy</button>
+                  </div>
+                </>
+              )}
+              {invocation ? <p>Once installed, enter <code>{invocation}</code> in your AI app.</p> : <p>Once installed, ask your AI app to use Playlist Organizer.</p>}
             </div>
           ))}
 
           <div class="panel" data-setup="claude" hidden>
-            <p>Enable code execution, then upload the ZIP under <strong>Customize → Skills</strong>.</p>
-            <a class="button secondary" href={zip}>Download ZIP</a>
+            <p>Download the skill ZIP. In Claude, open <strong>Plugins</strong> (or <strong>Customize → Skills</strong>) and upload it. Enable code execution if prompted.</p>
+            <a class="button primary" href={zip}>Download skill ZIP</a>
             <a class="guide-link" href="https://support.claude.com/en/articles/12512180-use-skills-in-claude">Claude setup guide</a>
           </div>
           <div class="panel" data-setup="gemini" hidden>
-            <p>Create a Gem named <strong>Playlist Organizer</strong> and paste these instructions.</p>
-            <div class="snippet">
-              <textarea readonly aria-label="Gemini Gem instructions">{gemInstructions}</textarea>
-              <button type="button" data-copy hidden aria-label="Copy the Gemini Gem instructions">Copy</button>
+            <p>Copy the request and paste it into a new Gemini chat to create the skill.</p>
+            <div class="install-actions">
+              <button type="button" class="button primary" data-copy data-copy-source="gemini-request" data-feedback="Request copied. Paste it into Gemini." hidden aria-label="Copy install request for Gemini">Copy install request</button>
+              <a class="guide-link" href="https://gemini.google.com/">Open Gemini</a>
             </div>
-            <a class="guide-link" href="https://support.google.com/gemini/answer/15146780">Gemini setup guide</a>
+            <details class="request-preview">
+              <summary>View install request</summary>
+              <pre><code id="gemini-request">{geminiRequest}</code></pre>
+            </details>
+            <details class="setup-alternative">
+              <summary>Use Gems if Skills is unavailable</summary>
+              <p>Create a Gem named <strong>Playlist Organizer</strong> and paste these instructions.</p>
+              <div class="snippet">
+                <textarea readonly rows="3" aria-label="Gemini Gem instructions">{gemInstructions}</textarea>
+                <button type="button" data-copy hidden aria-label="Copy the Gemini Gem instructions">Copy</button>
+              </div>
+              <a class="guide-link" href="https://support.google.com/gemini/answer/15146780">Gemini Gems guide</a>
+            </details>
           </div>
           <p id="install-copy-status" class="copy-status" role="status"></p>
 
@@ -208,37 +248,38 @@ const description = 'An open-source AI skill for organizing playlists, comparing
         });
       });
 
-      const host = document.querySelector<HTMLSelectElement>('#host')!;
+      const picker = document.querySelector('#host-picker')!;
       const panels = document.querySelectorAll<HTMLElement>('[data-setup]');
       const installStatus = document.querySelector('#install-copy-status')!;
       const sampleStatus = document.querySelector('#sample-copy-status')!;
-      const showSetup = () => {
-        panels.forEach((panel) => { panel.hidden = panel.dataset.setup !== host.value; });
+      picker.addEventListener('hostchange', (event) => {
+        const { detail: agent } = event as CustomEvent<string>;
+        panels.forEach((panel) => { panel.hidden = panel.dataset.setup !== agent; });
         installStatus.textContent = '';
-      };
-      host.labels?.[0]?.removeAttribute('hidden');
-      host.hidden = false;
-      showSetup();
-      host.addEventListener('change', showSetup);
+      });
 
       document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((button) => {
         button.hidden = false;
         button.addEventListener('click', async () => {
-          const snippet = button.closest('.snippet')!;
-          const field = snippet.querySelector('textarea');
-          const code = snippet.querySelector('code');
+          const snippet = button.closest('.snippet');
+          const field = snippet?.querySelector('textarea');
+          const code = button.dataset.copySource
+            ? document.getElementById(button.dataset.copySource)
+            : snippet?.querySelector('code');
           const value = field?.value ?? code?.textContent ?? '';
           const status = button.closest('.sample') ? sampleStatus : installStatus;
           try {
             await navigator.clipboard.writeText(value);
             if (button.closest<HTMLElement>('[data-setup]')?.hidden) return;
-            status.textContent = 'Copied to clipboard.';
+            status.textContent = button.dataset.feedback ?? 'Copied to clipboard.';
           } catch {
             if (button.closest<HTMLElement>('[data-setup]')?.hidden) return;
             if (field) {
               field.focus();
               field.select();
             } else if (code) {
+              const preview = code.closest('details');
+              if (preview) preview.open = true;
               const range = document.createRange();
               range.selectNodeContents(code);
               const selection = window.getSelection();

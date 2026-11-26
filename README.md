@@ -6,7 +6,13 @@ Review, group, and reorder music playlists. Preview removals and version swaps b
 
 [Find setup steps for your AI app](https://qtaghdi.github.io/playlist-organizer-skill/#install).
 
-For Codex, run:
+In Codex, paste this request into a chat:
+
+```text
+Use $skill-installer to install Playlist Organizer from https://github.com/qtaghdi/playlist-organizer-skill/tree/main/skills/playlist-organizer
+```
+
+You can also install from a terminal:
 
 ```sh
 npx --yes skills add qtaghdi/playlist-organizer-skill --skill playlist-organizer -a codex -g -y
@@ -18,9 +24,9 @@ For manual installation, copy the entire `skills/playlist-organizer/` folder int
 | --- | --- |
 | Codex | `.agents/skills/` or `~/.agents/skills/`. Run `$playlist-organizer`. |
 | Claude Code | `.claude/skills/` or `~/.claude/skills/`. Run `/playlist-organizer`. |
-| Claude web and desktop | Enable code execution. Upload the [ZIP](https://github.com/qtaghdi/playlist-organizer-skill/releases/latest/download/playlist-organizer.zip) under **Customize > Skills**. |
+| Claude web and desktop | Upload the [ZIP](https://github.com/qtaghdi/playlist-organizer-skill/releases/latest/download/playlist-organizer.zip) from **Plugins** or **Customize > Skills**. |
 | Gemini CLI | `.gemini/skills/` or `~/.gemini/skills/`. The `.agents/skills/` paths also work. |
-| Gemini web | Create a Gem with these [instructions](integrations/gemini-gem.md). |
+| Gemini web | Ask Gemini to create a skill from these [instructions](integrations/gemini-gem.md). If your account still has Gems, paste them into a new Gem. |
 | GitHub Copilot | `.github/skills/` or `~/.copilot/skills/`. |
 | Cursor | `.cursor/skills/` or `~/.cursor/skills/`. [Setup](https://cursor.com/docs/skills) |
 | OpenCode | `.opencode/skills/` or `~/.config/opencode/skills/`. Use `@playlist-organizer`. [Setup](https://opencode.ai/docs/skills/) |
