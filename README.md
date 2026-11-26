@@ -3,7 +3,7 @@
 A Codex skill for deciding which songs to keep, how to group them, and which playlist changes to apply. Start with a local CSV, a track list, or an Apple Music XML export.
 
 - Pick the playlists, listening signals, time window, and exceptions. Codex can recommend defaults after inspecting the available data.
-- Split tracks by mood, activity, genre, or patterns in your existing playlists. Choose title style and whether tracks can appear in multiple lists.
+- Split tracks by mood, activity, genre, or patterns in your existing playlists. Choose title style and whether tracks can appear in multiple lists. Review the opening, transitions, and runs of alternate versions for sequential listening.
 - Plan stale-track cleanup and clean-to-explicit swaps. For a swap, confirm the edition, existing playlist memberships, and favorite state before removing a verified original.
 
 ## Install for Codex
@@ -28,4 +28,4 @@ To inspect a CSV or Apple Music XML file from the repository root:
 python3 skills/playlist-organizer/scripts/audit.py /path/to/export.csv
 ```
 
-The audit is read-only. Keep exports and reports private. See the [skill](skills/playlist-organizer/SKILL.md) and [planning options](skills/playlist-organizer/references/planning.md) for the full workflow.
+The audit is read-only. Keep exports and reports private. See the [skill](skills/playlist-organizer/SKILL.md), [planning options](skills/playlist-organizer/references/planning.md), and [sequencing and order verification](skills/playlist-organizer/references/flow.md) for the full workflow.

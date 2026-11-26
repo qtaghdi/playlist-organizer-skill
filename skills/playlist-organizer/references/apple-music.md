@@ -26,11 +26,13 @@ Read Music's built-in scripting dictionary with Script Editor before relying on 
 3. Before changes, record the old track's memberships and favorite state. Add or reuse the verified counterpart. Check the title, artist, version, membership, and favorite on the new track. If the original was favorited, favorite the replacement and confirm it in Music. Preserve any existing favorite on the replacement.
 4. Verify each updated playlist before removing the old entry in the approved scope. Preserve playlist positions if supported. Check whether library-wide removal will affect other playlists and synced devices. If the original is still referenced outside the approved scope, retain it there and report the dependency.
 
+A catalog button changing state may reflect a catalog match to a song already in the library. Confirm that the target edition exists as its own library record with the right rating before deleting the source. If a web addition has not appeared in Music on Mac, check that the same library is open, use **File → Library → Update Cloud Library** when available, and re-read after sync. If a temporary favorite was used to make the exact replacement available and the final plan does not call for that favorite, clear the temporary mark and verify that the new track remains in the library. After removing a clean favorite, recheck the explicit favorite on the matching catalog item after sync. If the cloud drops it, restore the favorite on the exact replacement and verify again.
+
 Apple Music may not transfer history or counts between catalog versions. Use those signals for grouping without fabricating playback history for a replacement.
 
 ## Apply and verify
 
-Use native Music controls or supported authenticated tooling. For folder organization, create named standard playlists and add them to the selected folder. Smart playlists follow their rules. Treat shared, collaborative and subscription playlists as read-only until actual editability and authorized scope are established.
+Use native Music controls or supported authenticated tooling. For folder organization, create named standard playlists and add them to the selected folder. Test position changes on a small batch. Music may append a copied track even when an insertion position is supplied. When resequencing in place, confirm the current sequence and the staged target entries before removing superseded occurrences, and re-read the exact order afterward. Preserve the playlist identity when feasible. Smart playlists follow their rules. Treat shared, collaborative and subscription playlists as read-only until actual editability and authorized scope are established.
 
 For sourced track removal, use the playlist's removal action. Library removal is a separate action. Check the actual dialog and settings before accepting a removal. An XML export is an inventory and a partial recovery aid. It cannot recover local media, sync history, or every preference.
 
