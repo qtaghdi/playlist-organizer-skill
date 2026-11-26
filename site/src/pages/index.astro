@@ -1,202 +1,220 @@
 ---
 import gemDocument from '../../../integrations/gemini-gem.md?raw';
+import demo from '../listening-demo.json';
 import '../site.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '') + '/';
-const repository = 'https://github.com/qtaghdi/playlist-organizer-skill';
-const zip = `${repository}/releases/latest/download/playlist-organizer.zip`;
-const references = `${repository}/blob/main/skills/playlist-organizer/references`;
+const repo = 'https://github.com/qtaghdi/playlist-organizer-skill';
+const zip = `${repo}/releases/latest/download/playlist-organizer.zip`;
+const docs = `${repo}/blob/main/skills/playlist-organizer/references`;
 const gemInstructions = gemDocument.split('\n---\n')[1].trim();
-const installCommand = (agent: string) =>
+const command = (agent: string) =>
   `npx --yes skills add qtaghdi/playlist-organizer-skill --skill playlist-organizer -a ${agent} -g -y`;
 const hosts = [
   { name: 'Codex', agent: 'codex', invocation: '$playlist-organizer' },
   { name: 'Claude Code', agent: 'claude-code', invocation: '/playlist-organizer' },
-  { name: 'Gemini CLI', agent: 'gemini-cli', invocation: 'Playlist Organizer로 이 플리를 정리해줘.' },
-  { name: 'GitHub Copilot', agent: 'github-copilot', invocation: 'Playlist Organizer로 이 플리를 정리해줘.' },
-  { name: 'Cursor', agent: 'cursor', invocation: 'Playlist Organizer로 이 플리를 정리해줘.' },
+  { name: 'Gemini CLI', agent: 'gemini-cli', invocation: '' },
+  { name: 'GitHub Copilot', agent: 'github-copilot', invocation: '' },
+  { name: 'Cursor', agent: 'cursor', invocation: '' },
   { name: 'OpenCode', agent: 'opencode', invocation: '@playlist-organizer' },
 ];
-const tracks = [
-  ['유리 골목', 'Naru Field', '3:42'],
-  ['늦은 버스', 'Mio Lane', '4:06'],
-  ['물결 위로', 'Yeo June', '3:18'],
-  ['한 칸의 불빛', 'Sola Room', '3:54'],
-  ['서늘한 공기', 'Naru Field', '4:20'],
-  ['새벽의 끝', 'Oru Coast', '3:37'],
+const inputs = [
+  { name: 'Apple Music', file: 'Music XML', ref: 'apple-music' },
+  { name: 'Spotify', file: 'Account Data JSON', ref: 'spotify' },
+  { name: 'YouTube Music', file: 'Takeout CSV', ref: 'youtube-music' },
+  { name: 'Other music apps', file: 'CSV or a track list', ref: 'portable-inputs' },
+  { name: 'Local playlists', file: 'M3U or M3U8', ref: 'm3u' },
 ];
-const services = [
-  { name: 'Apple Music', ref: 'apple-music', data: 'Music XML', result: '파일 정리 · macOS 실계정 편집 확인¹' },
-  { name: 'Spotify', ref: 'spotify', data: '보관함 JSON, 재생 기록', result: '파일 변환 확인' },
-  { name: 'YouTube Music', ref: 'youtube-music', data: 'Takeout CSV', result: '파일 변환 확인' },
-  { name: 'M3U / M3U8', ref: 'm3u', data: '로컬 플레이리스트', result: '파일 읽기·다시 저장 확인' },
-  { name: 'Last.fm / ListenBrainz', ref: 'history', data: '재생 기록', result: '기록을 곡 목록에 합치기' },
-  { name: '기타 음악 앱', ref: 'portable-inputs', data: '곡 목록, CSV', result: '정리안과 새 곡 순서' },
-];
+const trackNames = new Map(Object.entries(demo.tracks));
+const position = (index: number) => String(index + 1).padStart(2, '0');
+const from = position(demo.order.before.indexOf(demo.changedTrack));
+const to = position(demo.order.after.indexOf(demo.changedTrack));
+const samplePrompt = `Use Playlist Organizer to review ${demo.name}. Keep the current order unless this listening note asks for a change. Show me the revised order before editing anything.\n\n${demo.savedNote}`;
+const description = 'An open-source AI skill for organizing playlists, comparing changes, and carrying listening notes into your next draft.';
 ---
 <!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="음악 앱의 플레이리스트를 정리하고, 한 줄 메모로 다음 곡 순서를 다듬는 오픈소스 AI 스킬." />
-    <meta name="theme-color" content="#f8f5ee" />
-    <link rel="icon" href={`${base}icon.png`} type="image/png" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f8f7f4" />
+    <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
     <link rel="canonical" href={new URL(base, Astro.site)} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Playlist Organizer" />
+    <meta property="og:description" content={description} />
     <title>Playlist Organizer</title>
   </head>
   <body>
-    <a class="skip-link" href="#main">본문으로</a>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header class="masthead wrap">
       <a class="brand" href={base}>
-        <img src={`${base}icon.png`} width="32" height="32" alt="" />
+        <img src={`${base}mark.svg`} width="29" height="29" alt="" />
         <span>Playlist Organizer</span>
       </a>
-      <nav aria-label="주 메뉴">
-        <a href="#support">지원 앱</a>
-        <a href={repository}>GitHub</a>
+      <nav aria-label="Main navigation">
+        <a class="support-link" href="#support">Compatibility</a>
+        <a href={repo}>GitHub</a>
       </nav>
     </header>
 
     <main id="main">
       <section class="hero wrap" aria-labelledby="title">
-        <div class="hero-copy">
-          <h1 id="title">듣던 플리,<br /><span>원하는 흐름으로.</span></h1>
-          <p>자주 듣는 곡을 모으고, 곡 사이의 흐름을 다듬어요. 듣다가 남긴 한 줄 메모는 다음 정리에 반영돼요.</p>
-          <a class="button main-button" href="#install">스킬 설치하기</a>
+        <h1 id="title">Keep the <em>good</em> transitions.</h1>
+        <div class="hero-intro">
+          <p>Reorder the playlists you already listen to. Leave a note about what works and carry it into the next draft.</p>
+          <a class="button primary" href="#install">Install the skill</a>
         </div>
 
-        <div class="example" id="example" aria-labelledby="example-title">
-          <div class="example-header">
-            <div>
-              <p class="caption">플레이리스트 예시</p>
-              <h2 id="example-title">심야 산책</h2>
+        <figure class="session" id="example" aria-labelledby="example-title">
+          <figcaption class="session-note">
+            <p id="example-title">Listening note</p>
+            <blockquote>“{demo.note}”</blockquote>
+            <p>{demo.name}</p>
+          </figcaption>
+          <div class="session-result">
+            <div class="result-heading">
+              <h2>Track order</h2>
+              <div class="order-control" role="group" aria-label="Compare playlist order" hidden>
+                <button type="button" data-order="before" aria-pressed="false">Before note</button>
+                <button type="button" data-order="after" aria-pressed="true">After note</button>
+              </div>
             </div>
-            <label class="switch" hidden>
-              <input type="checkbox" id="apply-note" />
-              <span class="switch-track" aria-hidden="true"></span>
-              <span>메모 반영</span>
-            </label>
-          </div>
-          <ol class="tracks">
-            {tracks.map(([title, artist, length], index) => (
-              <li data-track={index}>
-                <span class="sequence" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-                <span class="track-name"><strong>{title}</strong><small>{artist}</small></span>
-                <span class="duration">{length}</span>
-              </li>
+            {(['after', 'before'] as const).map((state) => (
+              <ol class="tracks" data-tracks={state} aria-label={state === 'after' ? 'After the note' : 'Before the note'} hidden={state === 'before'}>
+                {demo.order[state].map((id, index) => (
+                  <li class:list={[id === demo.changedTrack && (state === 'after' ? 'arrived' : 'original-position')]}>
+                    <span class="position" aria-hidden="true">{position(index)}</span>
+                    <span>{trackNames.get(id)?.title}</span>
+                    {id === demo.changedTrack && (state === 'after' ? (
+                      <span class="move"><span class="visually-hidden">Moved from track {Number(from)} to track {Number(to)}</span><span aria-hidden="true">{from} → {to}</span></span>
+                    ) : (
+                      <span class="move">Original position</span>
+                    ))}
+                  </li>
+                ))}
+              </ol>
             ))}
-          </ol>
-          <div class="example-note">
-            <span>듣고 남긴 메모</span>
-            <p>‘늦은 버스’ 바로 다음에 ‘서늘한 공기’가 좋았어.</p>
+            <p class="session-caption">Recorded skill run with four fictional tracks.</p>
+            <p class="visually-hidden" id="order-status" role="status"></p>
           </div>
-          <p class="visually-hidden" id="example-status" role="status"></p>
-        </div>
+        </figure>
       </section>
 
-      <section class="install wrap" id="install" aria-labelledby="install-title">
-        <div class="section-intro">
-          <h2 id="install-title">스킬 설치</h2>
-          <p>쓰는 AI 앱을 고르세요.</p>
+      <section class="setup wrap" id="install" aria-labelledby="install-title">
+        <div class="section-heading">
+          <h2 id="install-title">Install in your AI app.</h2>
+          <p>Choose your app, then try the same playlist.</p>
         </div>
-        <div class="installer">
-          <label for="host" hidden>AI 앱</label>
+        <div class="setup-content">
+          <label for="host" hidden>AI app</label>
           <select id="host" hidden>
             {hosts.map(({ name, agent }) => <option value={agent}>{name}</option>)}
-            <option value="claude">Claude 웹·데스크톱</option>
-            <option value="gemini">Gemini 웹</option>
+            <option value="claude">Claude web and desktop</option>
+            <option value="gemini">Gemini web</option>
           </select>
 
           {hosts.map(({ name, agent, invocation }) => (
-            <div class="setup" data-setup={agent} hidden={agent !== 'codex'}>
-              <p>터미널에서 실행하세요. Node.js와 npm이 필요해요.</p>
+            <div class="panel" data-setup={agent} hidden={agent !== 'codex'}>
+              <p>Run in your terminal with Node.js and npm.</p>
               <div class="snippet">
-                <pre><code>{installCommand(agent)}</code></pre>
-                <button type="button" data-copy hidden aria-label={`${name} 설치 명령 복사`}>복사</button>
+                <pre><code>{command(agent)}</code></pre>
+                <button type="button" data-copy hidden aria-label={`Copy the ${name} install command`}>Copy</button>
               </div>
-              <p>설치 후 <kbd>{invocation}</kbd>로 시작하세요. 파일 변환에는 Python 3.9 이상이 필요해요.</p>
+              {invocation ? <p>Open your AI app and enter <code>{invocation}</code>.</p> : <p>Open your AI app and ask it to use Playlist Organizer.</p>}
             </div>
           ))}
 
-          <div class="setup" data-setup="claude" hidden>
-            <p>코드 실행을 켠 후 <strong>Customize → Skills</strong>에서 ZIP을 올리세요.</p>
-            <a class="button secondary-button" href={zip}>ZIP 받기</a>
-            <a class="setup-help" href="https://support.claude.com/en/articles/12512180-use-skills-in-claude">Claude 설치 안내</a>
+          <div class="panel" data-setup="claude" hidden>
+            <p>Enable code execution, then upload the ZIP under <strong>Customize → Skills</strong>.</p>
+            <a class="button secondary" href={zip}>Download ZIP</a>
+            <a class="guide-link" href="https://support.claude.com/en/articles/12512180-use-skills-in-claude">Claude setup guide</a>
           </div>
-          <div class="setup" data-setup="gemini" hidden>
-            <p>Gemini에서 새 Gem을 만들고 아래 지침을 붙여 넣으세요. 곡 목록이나 CSV를 첨부해 시작할 수 있어요.</p>
-            <div class="snippet gem">
-              <textarea readonly aria-label="Gemini Gem 지침">{gemInstructions}</textarea>
-              <button type="button" data-copy hidden aria-label="Gemini Gem 지침 복사">복사</button>
+          <div class="panel" data-setup="gemini" hidden>
+            <p>Create a Gem named <strong>Playlist Organizer</strong> and paste these instructions.</p>
+            <div class="snippet">
+              <textarea readonly aria-label="Gemini Gem instructions">{gemInstructions}</textarea>
+              <button type="button" data-copy hidden aria-label="Copy the Gemini Gem instructions">Copy</button>
             </div>
-            <a class="setup-help" href="https://support.google.com/gemini/answer/15146780">Gem 만들기 안내</a>
+            <a class="guide-link" href="https://support.google.com/gemini/answer/15146780">Gemini setup guide</a>
           </div>
+          <p id="install-copy-status" class="copy-status" role="status"></p>
 
-          <p id="copy-status" class="copy-status" role="status"></p>
-          <div class="install-links">
-            <a href={zip}>수동 설치용 ZIP</a>
-            <a href={`${repository}#install`}>설치 문서</a>
+          <a href={`${repo}#install`}>Manual installation</a>
+
+          <div class="sample">
+            <h3>Try the example</h3>
+            <p><a href={`${base}sample-playlist.csv`} download>Download the sample CSV</a>, attach it in your AI app, and use this prompt.</p>
+            <div class="snippet">
+              <pre><code>{samplePrompt}</code></pre>
+              <button type="button" data-copy hidden aria-label="Copy the sample prompt">Copy</button>
+            </div>
+            <p id="sample-copy-status" class="copy-status" role="status"></p>
           </div>
         </div>
       </section>
 
       <section class="support wrap" id="support" aria-labelledby="support-title">
-        <h2 id="support-title">음악 앱 지원</h2>
-        <p>음악 앱 연결 없이도 내보낸 파일로 시작할 수 있어요.</p>
-        <table>
-          <caption class="visually-hidden">앱별 입력과 작업 범위</caption>
-          <thead><tr><th scope="col">서비스</th><th scope="col">가져오는 자료</th><th scope="col">작업 범위</th></tr></thead>
-          <tbody>
-            {services.map(({ name, ref, data, result }) => (
-              <tr>
-                <th scope="row"><a href={`${references}/${ref}.md`}>{name}</a></th>
-                <td>{data}</td><td>{result}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p class="support-note">¹ Apple Music에서 버전 교체와 즐겨찾기 이관을 확인했어요. 대량 순서 변경은 기기 간 동기화 결과를 따로 확인해야 해요.</p>
-        <p class="support-note">Spotify와 YouTube Music 실계정 편집은 아직 확인 전이에요. 오래 안 들은 곡은 재생 기록이 있을 때만 판단해요.</p>
+        <div class="section-heading">
+          <h2 id="support-title">Start with what you have.</h2>
+          <p>Use an export or a track list to draft changes.</p>
+        </div>
+        <div class="support-content">
+          <table>
+            <caption class="visually-hidden">Music apps and supported input files</caption>
+            <thead><tr><th scope="col">Music app</th><th scope="col">Input</th></tr></thead>
+            <tbody>
+              {inputs.map(({ name, file, ref }) => (
+                <tr><th scope="row"><a href={`${docs}/${ref}.md`}>{name}</a></th><td>{file}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <p>Filtering by last play requires listening history. <a href={`${docs}/history.md`}>Add listening history</a></p>
+          <p>Editing in a music app requires a supported connection and permission. Live edits in Spotify and YouTube Music are unverified.</p>
+          <p><a href={`${docs}/feedback.md`}>Save and reuse listening notes</a></p>
+          <p>The included file converters require Python 3.9 or later.</p>
+        </div>
       </section>
     </main>
 
     <footer class="footer wrap">
       <a class="brand" href={base}>
-        <img src={`${base}icon.png`} width="26" height="26" alt="" />
+        <img src={`${base}mark.svg`} width="24" height="24" alt="" />
         <span>Playlist Organizer</span>
       </a>
-      <a href={`${repository}/blob/main/LICENSE`}>MIT License</a>
+      <a href={`${repo}/blob/main/LICENSE`}>MIT License</a>
     </footer>
 
     <script>
-      const noteToggle = document.querySelector<HTMLInputElement>('#apply-note');
-      const example = document.querySelector<HTMLElement>('#example');
-      if (noteToggle && example) {
-        const list = example.querySelector('ol')!;
-        const rows = Array.from(list.querySelectorAll<HTMLLIElement>('li'));
-        const notedOrder = [0, 1, 4, 2, 3, 5].map((index) => rows[index]);
-        const status = example.querySelector('#example-status')!;
-        noteToggle.closest('label')!.hidden = false;
-        noteToggle.addEventListener('change', () => {
-          const order = noteToggle.checked ? notedOrder : rows;
-          order.forEach((row, index) => {
-            row.querySelector('.sequence')!.textContent = String(index + 1).padStart(2, '0');
-            list.append(row);
+      import demo from '../listening-demo.json';
+
+      const orderControl = document.querySelector<HTMLElement>('.order-control')!;
+      const orderButtons = orderControl.querySelectorAll<HTMLButtonElement>('[data-order]');
+      const trackLists = document.querySelectorAll<HTMLOListElement>('[data-tracks]');
+      const orderStatus = document.querySelector('#order-status')!;
+      orderControl.hidden = false;
+
+      orderButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          if (button.getAttribute('aria-pressed') === 'true') return;
+          const state = button.dataset.order === 'before' ? 'before' : 'after';
+          orderButtons.forEach((control) => {
+            control.setAttribute('aria-pressed', String(control === button));
           });
-          example.classList.toggle('note-applied', noteToggle.checked);
-          status.textContent = noteToggle.checked
-            ? '서늘한 공기를 늦은 버스 다음으로 옮겼어요.'
-            : '처음 곡 순서로 돌아왔어요.';
+          trackLists.forEach((list) => { list.hidden = list.dataset.tracks !== state; });
+          const position = demo.order[state].indexOf(demo.changedTrack) + 1;
+          orderStatus.textContent = `${button.textContent}: ${demo.tracks[demo.changedTrack as keyof typeof demo.tracks].title} is track ${position}.`;
         });
-      }
+      });
 
       const host = document.querySelector<HTMLSelectElement>('#host')!;
       const panels = document.querySelectorAll<HTMLElement>('[data-setup]');
-      const copyStatus = document.querySelector('#copy-status')!;
+      const installStatus = document.querySelector('#install-copy-status')!;
+      const sampleStatus = document.querySelector('#sample-copy-status')!;
       const showSetup = () => {
         panels.forEach((panel) => { panel.hidden = panel.dataset.setup !== host.value; });
-        copyStatus.textContent = '';
+        installStatus.textContent = '';
       };
       host.labels?.[0]?.removeAttribute('hidden');
       host.hidden = false;
@@ -208,25 +226,26 @@ const services = [
         button.addEventListener('click', async () => {
           const snippet = button.closest('.snippet')!;
           const field = snippet.querySelector('textarea');
-          const command = snippet.querySelector('code');
-          const content = field?.value ?? command?.textContent ?? '';
+          const code = snippet.querySelector('code');
+          const value = field?.value ?? code?.textContent ?? '';
+          const status = button.closest('.sample') ? sampleStatus : installStatus;
           try {
-            await navigator.clipboard.writeText(content);
-            if (!button.closest<HTMLElement>('[data-setup]')?.hidden) {
-              copyStatus.textContent = '복사했어요.';
-            }
+            await navigator.clipboard.writeText(value);
+            if (button.closest<HTMLElement>('[data-setup]')?.hidden) return;
+            status.textContent = 'Copied to clipboard.';
           } catch {
+            if (button.closest<HTMLElement>('[data-setup]')?.hidden) return;
             if (field) {
               field.focus();
               field.select();
-            } else if (command) {
+            } else if (code) {
               const range = document.createRange();
-              range.selectNodeContents(command);
+              range.selectNodeContents(code);
               const selection = window.getSelection();
               selection?.removeAllRanges();
               selection?.addRange(range);
             }
-            copyStatus.textContent = '자동 복사가 안 되면 선택한 내용을 복사하세요.';
+            status.textContent = 'Copy the selected text.';
           }
         });
       });
