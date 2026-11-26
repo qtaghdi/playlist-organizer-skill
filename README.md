@@ -1,31 +1,45 @@
 # Playlist Organizer
 
-A Codex skill for deciding which songs to keep, how to group them, and which playlist changes to apply. Start with a local CSV, a track list, or an Apple Music XML export.
+An Agent Skill for deciding which songs to keep, how to group and sequence them, and which changes to apply. Pick your AI host and music service independently.
 
-- Pick the playlists, listening signals, time window, and exceptions. Codex can recommend defaults after inspecting the available data.
-- Split tracks by mood, activity, genre, or patterns in your existing playlists. Choose title style and whether tracks can appear in multiple lists. Review the opening, transitions, and runs of alternate versions for sequential listening.
-- Plan stale-track cleanup and clean-to-explicit swaps. For a swap, confirm the edition, existing playlist memberships, and favorite state before removing a verified original.
+- Choose listening signals, a cutoff, and exceptions based on available data.
+- Build playlists around mood, activity, genre, or the user's listening patterns. Review openings and transitions before applying an exact order.
+- Preview stale-track removals and edition swaps. Verify the destination version and any transferred favorites before removing the verified original.
 
-## Install for Codex
+## Install in your AI host
 
-Clone the repository, then copy the entire `skills/playlist-organizer` directory to `.agents/skills/` in a project or to `~/.agents/skills/` for your account. Start a new Codex session and invoke `$playlist-organizer`. The local audit requires Python 3.9 or later.
+Copy the whole `skills/playlist-organizer` directory to a path below, or use the upload option. The bundled local tools require Python 3.9 or later.
 
-> $playlist-organizer Look at these playlists. Recommend a cutoff from my play history, protect favorites and recent additions, and propose short names for the new playlists. Start with a preview.
-
-> $playlist-organizer 내가 고른 플리의 마지막 재생일과 즐겨찾기를 보고 정리 기준을 추천해줘. 최근 추가한 곡은 두고, 남은 곡은 내가 자주 같이 듣는 곡을 중심으로 나눠줘. 플리 이름은 짧게 하고 먼저 미리보기로 보여줘.
-
-## Inputs and live edits
-
-| Source | How to use it |
+| AI host | Install and use |
 | --- | --- |
-| CSV or track list from any service | Use the [portable input format](skills/playlist-organizer/references/portable-inputs.md) for grouping and audit. |
-| Apple Music on macOS | Choose **File → Library → Export Library**. The skill includes [Apple Music-specific steps](skills/playlist-organizer/references/apple-music.md) for reviewing edits. |
-| Other services | Use a supported integration or the service's own controls for live edits when available. CSV and track lists still support a preview and a change plan. |
+| Codex | Copy into `.agents/skills/` or `~/.agents/skills/`. Invoke `$playlist-organizer`. [Codex installation paths](https://developers.openai.com/api/reference/cli) |
+| Claude Code | Copy into `.claude/skills/` or `~/.claude/skills/`. Invoke `/playlist-organizer`. [Claude Code skills](https://code.claude.com/docs/en/skills) |
+| Claude web and desktop | Download `playlist-organizer.zip` from [Releases](https://github.com/qtaghdi/playlist-organizer-skill/releases/latest) and upload it in **Customize → Skills** with code execution enabled. [Claude skills](https://support.claude.com/en/articles/12512180-use-skills-in-claude) |
+| Gemini CLI | Copy into `.gemini/skills/` or `~/.gemini/skills/`. The `.agents/skills/` paths also work. Ask Gemini CLI to use Playlist Organizer and confirm activation when prompted. [Gemini CLI skills](https://geminicli.com/docs/cli/skills/) |
+| Gemini web | Create a Gem and paste the [Gem instructions](integrations/gemini-gem.md). Upload only the track data you want to analyze. [Gem setup](https://support.google.com/gemini/answer/15235603) |
+| GitHub Copilot | Copy into `.github/skills/` for a project or `~/.copilot/skills/` for your account. [Copilot Agent Skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills) |
 
-To inspect a CSV or Apple Music XML file from the repository root:
+> Use Playlist Organizer with this CSV. Compare a six-month cutoff with what my history can actually support, then draft short playlists with a coherent listening order.
+
+> Playlist Organizer로 내가 고른 플리를 정리해줘. 재생 기록이 있는 곡을 기준으로 정리 기간을 추천하고, 새 플리의 제목과 순서를 먼저 보여줘.
+
+## Choose a music service
+
+| Service | Analysis inputs | Applying the plan |
+| --- | --- | --- |
+| [Apple Music](skills/playlist-organizer/references/apple-music.md) | Music on Mac XML or a portable list | Mac Music or another supported, authorized connection |
+| [Spotify](skills/playlist-organizer/references/spotify.md) | Personal playlist export JSON, optional Extended Streaming History, or a portable list | Spotify's editing controls when available |
+| [YouTube Music](skills/playlist-organizer/references/youtube-music.md) | Takeout playlist CSV, optional track labels, or a portable list | YouTube Music controls or authorized supported playlist operations |
+| [Other services](skills/playlist-organizer/references/portable-inputs.md) | CSV or track list | An available, authorized integration, or an ordered change plan |
+
+Installing the skill gives the agent the workflow. Live edits require tools and permissions for the selected service. Keep personal exports and reports private.
+
+## Run the local tools
 
 ```sh
-python3 skills/playlist-organizer/scripts/audit.py /path/to/export.csv
+python3 skills/playlist-organizer/scripts/import_export.py spotify Playlist1.json > playlist.csv
+python3 skills/playlist-organizer/scripts/import_export.py youtube "My mix.csv" --metadata track-labels.csv > playlist.csv
+python3 skills/playlist-organizer/scripts/audit.py playlist.csv
 ```
 
-The audit is read-only. Keep exports and reports private. See the [skill](skills/playlist-organizer/SKILL.md), [planning options](skills/playlist-organizer/references/planning.md), and [sequencing and order verification](skills/playlist-organizer/references/flow.md) for the full workflow.
+See the [skill](skills/playlist-organizer/SKILL.md), [planning options](skills/playlist-organizer/references/planning.md), and [sequencing and order verification](skills/playlist-organizer/references/flow.md) for the full workflow.
