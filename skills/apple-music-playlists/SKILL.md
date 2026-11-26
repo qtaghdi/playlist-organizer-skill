@@ -1,0 +1,12 @@
+---
+name: apple-music-playlists
+description: Audit, redesign, and organize Apple Music playlists using selectable listening and library signals. Use for stale-song cleanup, personalized playlist grouping, duplicate editions, and verified clean-to-explicit replacements with favorite preservation.
+---
+
+Help the user decide what belongs in their playlists and, when requested, reflect the approved changes in Apple Music. Answer in the user's language.
+
+1. Identify the intended output and source scope from the request. Distinguish a recommendation, a new folder, edits to selected playlists, and removal from the music library. Treat those as independently selectable operations. Reuse the user's choices and offer recommendations for open decisions together. Read [planning.md](references/planning.md) for selectable data, rules, and grouping.
+2. Survey the available data. On macOS, prefer a fresh Music library XML export. Run `scripts/audit.py` with the selected scope and signals, using a summary before opening full song-level output for large libraries. Follow [apple-music.md](references/apple-music.md) for collection, rating checks, and application. If only a file or song list is available, support the analysis it can substantiate and describe which parts require richer data or Music access.
+3. Propose a plan with the actual playlist names, counts, representative tracks, cutoff and missing-data handling, and destination. Separate keep, exclude from proposals, remove from specific playlists, replace, and remove from the library in the change list. Use ID-based mappings and preserve source membership and order when a replacement is requested. Show uncertain classifications and replacement matches as pending.
+4. Apply only the actions authorized by the user. A design or preview request leaves Music untouched. When an irreversible removal lacks clear scope or authorization, show the affected items and ask before applying it. Add and verify a confirmed replacement and its favorite status before removing the original. Check existing edits and dependent playlists before library-wide changes. Use native Music controls or a supported integration, starting with a small verified batch when write behavior is unfamiliar.
+5. Re-read affected playlists, library membership, and favorites as applicable. Report verified changes, unresolved tracks, and any sync or tool limitations. Keep personal exports, catalogs derived from listening data, and change plans out of public repositories.
