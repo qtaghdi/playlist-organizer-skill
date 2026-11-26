@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Inventory an Apple Music XML export without changing Music."""
+"""Inventory a playlist CSV or Apple Music XML export without changing the source."""
 
 import argparse
 from collections import Counter
+import csv
 from datetime import date, datetime, timezone
 import json
 import plistlib
@@ -21,6 +22,84 @@ SIGNALS = {
     "tempo": ("BPM",),
     "versions": (),
 }
+
+
+def load_csv(path, zone):
+    """Map the portable CSV fields to the track and playlist inventory."""
+    tracks = {}
+    ids = {}
+    playlists = {}
+    with path.open(encoding="utf-8-sig", newline="") as source:
+        rows = csv.DictReader(source)
+        if not {"title", "artist"}.issubset(rows.fieldnames or []):
+            raise ValueError("CSV requires title and artist columns")
+        for line, record in enumerate(rows, start=2):
+            if None in record or None in record.values():
+                raise ValueError(f"CSV row {line} has the wrong number of fields")
+            row = {key: value.strip() for key, value in record.items()}
+            if not any(row.values()):
+                continue
+            if not row["title"]:
+                raise ValueError(f"CSV row {line} has no title")
+
+            key = row.get("track_id")
+            track_id = ids.get(key, line)
+            track = {"Track ID": track_id, "Name": row["title"], "Artist": row["artist"]}
+            if key:
+                ids[key] = track_id
+                track["Persistent ID"] = key
+            for key, field in (("album", "Album"), ("genre", "Genre")):
+                if row.get(key):
+                    track[field] = row[key]
+            for key, field in (("play_count", "Play Count"), ("skip_count", "Skip Count"), ("bpm", "BPM")):
+                if row.get(key):
+                    try:
+                        track[field] = int(row[key])
+                        if track[field] < 0:
+                            raise ValueError()
+                    except ValueError as exc:
+                        raise ValueError(f"CSV row {line} has invalid {key}") from exc
+            for key, field in (("last_played", "Play Date UTC"), ("date_added", "Date Added"), ("last_skipped", "Skip Date")):
+                if row.get(key):
+                    try:
+                        value = datetime.fromisoformat(row[key].replace("Z", "+00:00"))
+                    except ValueError as exc:
+                        raise ValueError(f"CSV row {line} has invalid {key}") from exc
+                    track[field] = value if value.tzinfo is not None else value.replace(tzinfo=zone)
+            if row.get("favorite"):
+                value = row["favorite"].lower()
+                if value not in ("true", "false", "1", "0"):
+                    raise ValueError(f"CSV row {line} has invalid favorite")
+                track["Favorited"] = value in ("true", "1")
+            if row.get("version"):
+                value = row["version"].lower()
+                if value not in ("clean", "explicit", "unmarked"):
+                    raise ValueError(f"CSV row {line} has invalid version")
+                track["Clean"] = value == "clean"
+                track["Explicit"] = value == "explicit"
+
+            existing = tracks.setdefault(track_id, {})
+            if any(field in existing and existing[field] != value for field, value in track.items()):
+                raise ValueError(f"CSV row {line} conflicts with prior metadata for the same track_id")
+            existing.update(track)
+
+            name, source_id = row.get("playlist"), row.get("playlist_id")
+            if name or source_id:
+                playlist_key = ("id", source_id) if source_id else ("name", name)
+                playlist = playlists.setdefault(playlist_key, {
+                    "Playlist Persistent ID": str(len(playlists) + 1),
+                    "Name": name or None,
+                    "Playlist Items": [],
+                })
+                if name and playlist["Name"] not in (None, name):
+                    raise ValueError(f"CSV row {line} conflicts with a prior playlist title")
+                if name:
+                    playlist["Name"] = name
+                playlist["Playlist Items"].append({"Track ID": track_id})
+    for (_, key), playlist in playlists.items():
+        if playlist["Name"] is None:
+            playlist["Name"] = key
+    return {"Tracks": tracks, "Playlists": list(playlists.values())}
 
 
 def music_date(value, zone):
@@ -180,10 +259,10 @@ def audit(export, args, signals, zone):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("export", type=Path, help="local Apple Music XML export")
+    parser.add_argument("export", type=Path, help="local CSV or Apple Music XML export")
     scope = parser.add_mutually_exclusive_group()
-    scope.add_argument("--library", action="store_true", help="select the library in a full library export")
-    scope.add_argument("--playlist", action="append", default=[], help="playlist persistent ID (repeatable)")
+    scope.add_argument("--library", action="store_true", help="select all CSV tracks or the library in a full XML export")
+    scope.add_argument("--playlist", action="append", default=[], help="playlist ID reported by the inventory (repeatable)")
     parser.add_argument("--signals", default="", help="comma-separated fields: " + ", ".join(SIGNALS))
     parser.add_argument("--tracks", action="store_true", help="include individual tracks in the report")
     parser.add_argument("--cutoff", type=date.fromisoformat, help="inclusive local cutoff date (YYYY-MM-DD)")
@@ -211,8 +290,11 @@ def main():
 
     try:
         zone = ZoneInfo(args.timezone)
-        with args.export.open("rb") as source:
-            export = plistlib.load(source)
+        if args.export.suffix.lower() == ".csv":
+            export = load_csv(args.export, zone)
+        else:
+            with args.export.open("rb") as source:
+                export = plistlib.load(source)
         result = audit(export, args, signals, zone)
     except ZoneInfoNotFoundError:
         parser.error(f"unknown timezone: {args.timezone}")

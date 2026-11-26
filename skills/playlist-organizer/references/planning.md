@@ -13,7 +13,7 @@ Use only the information needed for the requested actions. Users can opt into or
 | Favorites, ratings and dislikes when available | Protect or rank liked tracks, and transfer a favorite when replacing its song |
 | Existing playlist overlap and order | Learn which tracks the user already listens to together and preserve deliberate sequences |
 | Genres, artist patterns, mood, activity, user anchors, lyrics language, tempo or energy | Group or order tracks when those signals are known. Optional labels supplied by the user are valid. Do not infer language from storefront or tempo from genre labels |
-| Apple Music catalog and store region | Verify available editions when the user allows a catalog lookup. Send the minimum search terms required for the specific match |
+| Music catalog and store region | Verify available editions when the user allows a catalog lookup. Send the minimum search terms required for the specific match |
 | Additional history or curated track lists supplied by the user | Fill coverage gaps. Match using stable identifiers first and leave ambiguous title/artist matches unresolved |
 
 For a large library, summarize date coverage, playlist sizes, favorite coverage when known, and dominant genres or playlist overlap before recommending defaults. An export may omit data for songs found only in playlists or activity from other devices. Missing fields represent unknowns.
@@ -28,6 +28,6 @@ For a large library, summarize date coverage, playlist sizes, favorite coverage 
 
 ## Check the plan
 
-Use stable playlist IDs, track IDs and, where applicable, the position or number of occurrences for changes. Snapshot numeric XML track IDs are valid for joins within that export. Before live changes, re-resolve identities from persistent IDs or a verified catalog ID.
+Use stable playlist IDs, track IDs and, where applicable, the position or number of occurrences for changes. Snapshot numeric track IDs are valid for joins within that export. Before live changes, re-resolve identities from persistent IDs or a verified catalog ID.
 
 For exclusive grouping, every retained track should appear once unless it is explicitly deferred. For overlapping grouping, report both unique tracks and total playlist entries. Resolve unintended empty lists, name clashes, favorite transfers, unresolved IDs, and duplicate actions before applying. Preserve relative order and deliberate duplicate entries in existing playlists where the client supports exact edits. Explain any unsupported edit before changing that playlist.
