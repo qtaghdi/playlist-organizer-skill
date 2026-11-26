@@ -5,3 +5,7 @@ __pycache__/
 *.musiclibrary/
 
 .playlist-organizer/
+
+/site/node_modules/
+/site/dist/
+/site/.astro/

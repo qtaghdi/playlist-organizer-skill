@@ -4,7 +4,15 @@ Review, group, and reorder music playlists. Preview removals and version swaps b
 
 ## Install
 
-For local agents, copy the entire `skills/playlist-organizer/` folder into the folder listed below. The command-line tools need Python 3.9 or later.
+[Find setup steps for your AI app](https://qtaghdi.github.io/playlist-organizer-skill/#install).
+
+For Codex, run:
+
+```sh
+npx --yes skills add qtaghdi/playlist-organizer-skill --skill playlist-organizer -a codex -g -y
+```
+
+For manual installation, copy the entire `skills/playlist-organizer/` folder into the folder listed below. The command-line tools need Python 3.9 or later.
 
 | App | Setup |
 | --- | --- |
